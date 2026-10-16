@@ -88,6 +88,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="RunHistory.cs" />
     <Compile Include="RunLogger.cs" />
+    <Compile Include="Interop.cs" />
     <Compile Include="ScheduledTaskManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">

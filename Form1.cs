@@ -37,6 +37,12 @@ namespace ProductionDocumentationSync
         private int _runOk, _runFail, _runExcel;    // son kopyalama turunun sayaçları
         private int _lastGroups = -1;               // son listelemedeki grup sayısı
 
+        // Görünürlük: tepsi simgesi, başlık, görev çubuğu ilerlemesi, otomatik kapanış geri sayımı
+        private NotifyIcon _tray;
+        private string _baseTitle = "Üretim Doküman Senkronizasyonu";
+        private System.Windows.Forms.Timer _autoCloseTimer;
+        private int _autoCloseLeft;
+
         // Günlük sekmesi
         private List<LogEntry> _shownLines = new List<LogEntry>();
         private long _lastShownSeq;
@@ -49,6 +55,7 @@ namespace ProductionDocumentationSync
             _isAuto = isAuto;
             InitializeComponent();
             InitHistoryColumns();
+            InitTray();
         }
 
         // ------------------------------------------------------------------
@@ -64,7 +71,9 @@ namespace ProductionDocumentationSync
             dtpTo.Value = DateTime.Today;
             lblMode.Text = _isAuto ? "Mod: OTOMATİK" : "Mod: MANUEL";
             lblHedef.Text = "Hedef: " + AppConfig.TargetRoot;
-            Text = "Üretim Doküman Senkronizasyonu" + (_isAuto ? " — OTOMATİK" : "");
+            _baseTitle = "Üretim Doküman Senkronizasyonu" + (_isAuto ? " — OTOMATİK" : "");
+            Text = _baseTitle;
+            UpdateTrayText(null);
             if (_isAuto) tabControl1.SelectedTab = tabGunluk;   // otomatikte canlı günlük görünsün
 
             _logger.Log("INFO", "SESSION", "Started", path: _logger.Mode);
@@ -116,6 +125,8 @@ namespace ProductionDocumentationSync
                 _autoWatchdog.Start();
             }
 
+            Notify("Otomatik çalışma başladı", "İlerleme pencere başlığında, durum çubuğunda ve görev çubuğu düğmesinde görünür.", ToolTipIcon.Info);
+
             // Load/Shown içinde doğrudan değil; mesaj döngüsü boşalınca başlat.
             BeginInvoke(new Action(() => StartRun(true, true)));
         }
@@ -138,10 +149,18 @@ namespace ProductionDocumentationSync
                 _logger.Log("WARN", "SESSION", "İşlem sürerken kullanıcı kapattı");
             }
             if (_autoWatchdog != null) _autoWatchdog.Stop();
+            if (_autoCloseTimer != null) _autoCloseTimer.Stop();
             if (_logger != null)
             {
                 _logger.EntryAdded -= OnLogEntryFromAnyThread;
                 _logger.Finish("Kopyalandı: " + _logger.OkCopies + ", Hatalı: " + _logger.FailCopies + ", Excel: " + _logger.ExcelCount);
+            }
+            TaskbarProgress.SetState(Handle, TaskbarProgress.State.NoProgress);
+            if (_tray != null)
+            {
+                _tray.Visible = false;
+                _tray.Dispose();
+                _tray = null;
             }
         }
 
@@ -255,7 +274,35 @@ namespace ProductionDocumentationSync
             if (_autoWatchdog != null) _autoWatchdog.Stop();
             Environment.ExitCode = exitCode;
             _logger.Finish(summary + " | ExitCode=" + exitCode);
-            BeginInvoke(new Action(Close));
+
+            TaskbarProgress.SetState(Handle, exitCode == 0 ? TaskbarProgress.State.NoProgress : TaskbarProgress.State.Error);
+            Notify(exitCode == 0 ? "Otomatik çalışma tamamlandı" : "Otomatik çalışma bitti (uyarı, kod " + exitCode + ")",
+                   summary, exitCode == 0 ? ToolTipIcon.Info : ToolTipIcon.Warning);
+
+            int delay = Math.Max(0, AppConfig.AutoCloseDelaySeconds);
+            if (delay == 0)
+            {
+                BeginInvoke(new Action(Close));
+                return;
+            }
+
+            // Özet bir süre ekranda kalsın, sonra kendini kapatsın.
+            _autoCloseLeft = delay;
+            SetStatus(summary + " — pencere " + _autoCloseLeft + " sn sonra kapanacak");
+            _autoCloseTimer = new System.Windows.Forms.Timer();
+            _autoCloseTimer.Interval = 1000;
+            _autoCloseTimer.Tick += (s, e) =>
+            {
+                _autoCloseLeft--;
+                if (_autoCloseLeft <= 0)
+                {
+                    _autoCloseTimer.Stop();
+                    Close();
+                    return;
+                }
+                SetStatus(summary + " — pencere " + _autoCloseLeft + " sn sonra kapanacak");
+            };
+            _autoCloseTimer.Start();
         }
 
         private void SetBusy(bool busy)
@@ -265,12 +312,41 @@ namespace ProductionDocumentationSync
             btnListele.Enabled = btnKopyala.Enabled = btnBasla.Enabled = enable;
             dtpFrom.Enabled = dtpTo.Enabled = !busy;
             UseWaitCursor = busy;
+
+            tsProgress.Visible = busy;
+            if (busy)
+            {
+                tsProgress.Value = 0;
+                TaskbarProgress.SetState(Handle, TaskbarProgress.State.Normal);
+            }
+            else
+            {
+                TaskbarProgress.SetState(Handle, TaskbarProgress.State.NoProgress);
+                Text = _baseTitle;
+                UpdateTrayText(null);
+            }
             UpdateCurrentRunRow();
         }
 
+        /// <summary>Durum çubuğu + pencere başlığı (görev çubuğu düğmesinde de görünür).</summary>
         private void SetStatus(string text)
         {
-            SafeInvoke(() => { lblStatus.Text = text; });
+            SafeInvoke(() =>
+            {
+                lblStatus.Text = text;
+                Text = _busy ? _baseTitle + " — " + text : _baseTitle;
+            });
+        }
+
+        /// <summary>İlerleme: durum çubuğu, görev çubuğu düğmesi (yeşil dolgu) ve tepsi simgesi ipucu. UI iş parçacığında çağrılır.</summary>
+        private void UiProgress(int done, int total)
+        {
+            int max = Math.Max(1, total);
+            int val = Math.Min(max, Math.Max(0, done));
+            tsProgress.Maximum = max;
+            tsProgress.Value = val;
+            TaskbarProgress.SetValue(Handle, val, max);
+            UpdateTrayText(done + "/" + total);
         }
 
         /// <summary>UI iş parçacığında eşzamanlı çalıştırır; form kapanmışsa sessizce atlar.</summary>
@@ -348,8 +424,7 @@ namespace ProductionDocumentationSync
                     _itemsByKey[project + "|" + subFolder + "|" + BaseCodeForSearch(product)] = item;
                 }
                 listView1.EndUpdate();
-                progressBar1.Maximum = Math.Max(1, groups.Count);
-                progressBar1.Value = 0;
+                UiProgress(0, groups.Count);
             });
 
             _logger.Log("OK", "LIST", "Grup: " + groups.Count + ", Satır: " + dt.Rows.Count);
@@ -370,7 +445,7 @@ namespace ProductionDocumentationSync
             _runOk = 0; _runFail = 0; _runExcel = 0;
             _opCopyStatus.Clear();
 
-            SafeInvoke(() => { progressBar1.Maximum = Math.Max(1, totalProducts); progressBar1.Value = 0; });
+            SafeInvoke(() => UiProgress(0, totalProducts));
             _logger.Log("INFO", "COPY_ALL", "Klasör: " + folders.Count + ", Ürün: " + totalProducts, path: AppConfig.TargetRoot);
 
             bool templateOk = File.Exists(AppConfig.TemplateXlsx);
@@ -469,7 +544,7 @@ namespace ProductionDocumentationSync
                             li.SubItems[4].Text = rowStatus;
                             li.ForeColor = IsCopied(rowStatus) ? Color.Black : Color.Red;
                         }
-                        progressBar1.Value = Math.Min(progressBar1.Maximum, doneNow);
+                        UiProgress(doneNow, totalProducts);
                     });
                 }
 
@@ -909,6 +984,55 @@ namespace ProductionDocumentationSync
         }
 
         private void btnGunlukYenile_Click(object sender, EventArgs e) { RefreshRuns(); }
+
+        private void btnGunlukTemizle_Click(object sender, EventArgs e)
+        {
+            int? keepDays = PromptRetentionDays();
+            if (!keepDays.HasValue) return;
+
+            string logDir = _logger != null ? _logger.LogDir : AppConfig.LogDir;
+            var exclude = _logger != null ? new[] { _logger.TxtPath, _logger.XlsxPath } : new string[0];
+            int failed;
+            int deleted = RunHistory.Cleanup(logDir, keepDays.Value, exclude, out failed);
+
+            string msg = deleted + " günlük dosyası silindi" + (failed > 0 ? ", " + failed + " dosya silinemedi (kullanımda olabilir)" : "") +
+                         " (" + (keepDays.Value == 0 ? "bu oturum hariç hepsi" : keepDays.Value + " günden eskiler") + ").";
+            if (_logger != null) _logger.Log(failed > 0 ? "WARN" : "INFO", "LOG_CLEANUP", msg, path: logDir);
+            RefreshRuns();
+            SetStatus(msg);
+            MessageBox.Show(this, msg, "Günlükleri Temizle", MessageBoxButtons.OK, failed > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+        }
+
+        /// <summary>Kaç günden eski günlüklerin silineceğini sorar; iptalde null.</summary>
+        private int? PromptRetentionDays()
+        {
+            using (var dlg = new Form())
+            {
+                dlg.Text = "Günlükleri Temizle";
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.ClientSize = new Size(400, 135);
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+                dlg.ShowInTaskbar = false;
+
+                var lbl = new Label
+                {
+                    Text = "Günlük klasöründeki Run_*.log, Run_*.xlsx ve Crash_*.log dosyalarından şu kadar günden eski olanlar silinecek (0 = bu oturum hariç hepsi):",
+                    Location = new Point(12, 10),
+                    Size = new Size(376, 44)
+                };
+                var num = new NumericUpDown { Minimum = 0, Maximum = 3650, Value = 30, Location = new Point(12, 62), Width = 80 };
+                var lbl2 = new Label { Text = "gün", AutoSize = true, Location = new Point(98, 65) };
+                var ok = new Button { Text = "Sil", DialogResult = DialogResult.OK, Location = new Point(232, 98), Size = new Size(75, 26) };
+                var cancel = new Button { Text = "İptal", DialogResult = DialogResult.Cancel, Location = new Point(313, 98), Size = new Size(75, 26) };
+                dlg.Controls.AddRange(new Control[] { lbl, num, lbl2, ok, cancel });
+                dlg.AcceptButton = ok;
+                dlg.CancelButton = cancel;
+
+                return dlg.ShowDialog(this) == DialogResult.OK ? (int?)(int)num.Value : null;
+            }
+        }
         private void btnLogKlasoru_Click(object sender, EventArgs e) { OpenInExplorer(_logger != null ? _logger.LogDir : AppConfig.LogDir); }
         private void chkSadeceSorun_CheckedChanged(object sender, EventArgs e) { ApplyFilter(); }
         private void txtFiltre_TextChanged(object sender, EventArgs e) { ApplyFilter(); }
@@ -946,6 +1070,80 @@ namespace ProductionDocumentationSync
         }
 
         // ------------------------------------------------------------------
+        // Görünürlük: tepsi simgesi, balon bildirimleri, pencereyi öne getirme, örnekler arası mesaj
+        // ------------------------------------------------------------------
+        private void InitTray()
+        {
+            try
+            {
+                _tray = new NotifyIcon();
+                try { _tray.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
+                catch { _tray.Icon = SystemIcons.Application; }
+                _tray.Text = _baseTitle;
+                _tray.Visible = true;
+                _tray.MouseClick += (s, e) => RestoreWindow();
+                _tray.BalloonTipClicked += (s, e) => RestoreWindow();
+            }
+            catch { _tray = null; }
+        }
+
+        private void UpdateTrayText(string progress)
+        {
+            if (_tray == null) return;
+            string t = progress == null ? _baseTitle : _baseTitle + " — çalışıyor " + progress;
+            if (t.Length > 63) t = t.Substring(0, 63);   // NotifyIcon.Text sınırı
+            try { _tray.Text = t; } catch { }
+        }
+
+        private void Notify(string title, string text, ToolTipIcon icon)
+        {
+            if (_tray == null) return;
+            try { _tray.ShowBalloonTip(8000, title, text ?? "", icon); } catch { }
+        }
+
+        /// <summary>Pencereyi geri yükler ve öne getirir (tepsi tıklaması / ikinci örnek açılınca).</summary>
+        private void RestoreWindow()
+        {
+            try
+            {
+                if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+                Show();
+                Activate();
+                TopMost = true;   // öne getirme hilesi
+                TopMost = false;
+            }
+            catch { }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == NativeMethods.WM_APP_NOTIFY)
+            {
+                int kind = (int)m.WParam.ToInt64();
+                if (kind == 1) OnAutoRunSkipped();
+                else RestoreWindow();
+                return;
+            }
+            base.WndProc(ref m);
+        }
+
+        /// <summary>Zamanlanmış görev tetiklendi ama bu pencere açık olduğu için ikinci örnek 4 ile çıktı.</summary>
+        private void OnAutoRunSkipped()
+        {
+            if (_logger != null)
+                _logger.Log("WARN", "TASK", "Zamanlanmış görev tetiklendi ama bu pencere açık olduğu için otomatik çalışma atlandı");
+            RestoreWindow();
+            Notify("Zamanlanmış görev atlandı", "Bu pencere açık olduğu için otomatik çalışma yapılmadı.", ToolTipIcon.Warning);
+            if (_isAuto) return;   // otomatik örnekte modal pencere açıp işi bekletme
+            RefreshTaskUi();
+            MessageBox.Show(this,
+                "Zamanlanmış görev az önce tetiklendi ama bu pencere açık olduğu için otomatik çalışma atlandı.\n\n" +
+                "Şimdi çalıştırmak için \"Listele + Kopyala\" düğmesini kullanın ya da pencereyi kapatıp Zamanlama sekmesindeki " +
+                "\"Şimdi Çalıştır (test)\" ile görevi yeniden başlatın. Görev bir sonraki zamanında yine çalışır.",
+                "Zamanlanmış görev atlandı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        // ------------------------------------------------------------------
         // Zamanlama sekmesi (Windows Görev Zamanlayıcı)
         // ------------------------------------------------------------------
         private CheckBox[] DayChecks
@@ -958,11 +1156,14 @@ namespace ProductionDocumentationSync
             string exe = Application.ExecutablePath;
             string user = Environment.UserDomainName + "\\" + Environment.UserName;
             lblGorevNot.Text =
+                "Otomatik çalışma, çalıştığı günün (başlangıç tarihi o gün olan) iş emirlerini işler; \"gün geriye\" değeri verilirse önceki günler de dahil edilir. " +
+                "Pencere açılır, ilerleme başlıkta / durum çubuğunda / görev çubuğunda görünür, bitince özet gösterip kendini kapatır.\r\n" +
                 "Görev \"yalnızca kullanıcı oturum açtığında\" çalışacak şekilde kurulur; SOLIDWORKS PDM istemcisi etkileşimsiz oturumda " +
                 "çalışmadığı için bu zorunludur. Bu bilgisayarda " + user + " oturumunun açık kalması gerekir (ekran kilitli olabilir).\r\n" +
                 "Görev şu programı /auto ile başlatır: " + exe + "\r\n" +
-                "Görev saatinde bu pencere açıksa görev \"zaten çalışıyor\" (sonuç 4) ile atlanır; işiniz bitince pencereyi kapatın. " +
+                "Görev saatinde bu pencere açıksa otomatik çalışma atlanır ve bu pencerede uyarı çıkar; işiniz bitince pencereyi kapatın. " +
                 "Sonuçlar \"Çalışma Günlüğü\" sekmesinde görünür.";
+            try { numLookback.Value = Math.Max(numLookback.Minimum, Math.Min(numLookback.Maximum, AppConfig.AutoLookbackDays)); } catch { }
 
             ScheduledTaskInfo info = ScheduledTaskManager.Query();
             lblGorevProgram.ForeColor = SystemColors.ControlText;
@@ -1033,13 +1234,33 @@ namespace ProductionDocumentationSync
             TimeSpan t = dtpGorevSaat.Value.TimeOfDay;
             TimeSpan time = new TimeSpan(t.Hours, t.Minutes, 0);
             string schedule = ScheduledTaskManager.DescribeSchedule(time, mask);
+
+            // "Gün geriye" ayarı exe.config'e yazılır (otomatik çalışma bunu okur)
+            int lookback = (int)numLookback.Value;
+            if (lookback != AppConfig.AutoLookbackDays)
+            {
+                try
+                {
+                    AppConfig.SaveAutoLookbackDays(lookback);
+                    _logger.Log("OK", "CONFIG", "AutoLookbackDays=" + lookback + " olarak kaydedildi");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log("FAIL", "CONFIG", "AutoLookbackDays kaydedilemedi: " + ex.Message);
+                    MessageBox.Show(this, "\"Gün geriye\" ayarı kaydedilemedi (exe.config yazılamıyor):\n" + ex.Message +
+                                          "\n\nGörev yine de kurulacak; ayarı exe.config içinde elle değiştirebilirsiniz.",
+                                    "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+
             try
             {
                 ScheduledTaskManager.Register(time, mask, Application.ExecutablePath, "/auto");
                 _logger.Log("OK", "TASK", "Zamanlanmış görev kuruldu/güncellendi: " + schedule, path: Application.ExecutablePath);
                 RefreshTaskUi();
                 MessageBox.Show(this,
-                    "Görev kuruldu: " + schedule + "\n\nGörev yalnızca " + Environment.UserDomainName + "\\" + Environment.UserName +
+                    "Görev kuruldu: " + schedule + "\nİşlenecek günler: " + (lookback == 0 ? "yalnızca çalıştığı gün" : "çalıştığı gün + " + lookback + " gün geriye") +
+                    "\n\nGörev yalnızca " + Environment.UserDomainName + "\\" + Environment.UserName +
                     " oturumu açıkken çalışır. Denemek için \"Şimdi Çalıştır (test)\" düğmesini kullanabilirsiniz.",
                     "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

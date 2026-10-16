@@ -1,6 +1,6 @@
 # ProductionDocumentationSync — Durum
 
-Son güncelleme: 16 Ekim 2026 — Manuel mod sunucuda doğrulandı; uygulama içi "Zamanlama" sekmesi (Görev Zamanlayıcı kur/güncelle/kaldır/şimdi çalıştır) eklendi ve gerçek görev testi geçti. Push kimlik sorunu nedeniyle bekliyor.
+Son güncelleme: 16 Ekim 2026 — Otomatik çalışma görünürlüğü (başlık/durum çubuğu/görev çubuğu/tepsi), ikinci örnekte pencereyi öne getirme, atlanan görev uyarısı, "İşlenecek günler" ayarı ve "Günlükleri Temizle" eklendi. Push kimlik sorunu nedeniyle bekliyor.
 
 ## Şu an nerede kaldık
 Kullanıcı yeni sunucuda manuel modu (Listele/Kopyala) sorunsuz çalıştırdı. İstek üzerine zamanlama uygulama içine
@@ -26,6 +26,7 @@ Release derlemesi 0 hata / 0 uyarı. Git: yerelde 2 commit ileride; push için `
 - Git Bash `/auto` argümanını yola çevirir; test için cmd/PowerShell ya da `Run-Auto-Test.cmd` kullan.
 
 ## Tamamlananlar (yeniden eskiye)
+- 16.10.2026 — Görünürlük: ToolStripProgressBar (durum çubuğu), başlıkta ilerleme, ITaskbarList3 görev çubuğu ilerlemesi, NotifyIcon + balonlar, AutoCloseDelaySeconds geri sayımı; ikinci örnek → çalışan pencereyi öne getirir; görev pencere açıkken tetiklenirse SKIP günlüğü + WM_APP uyarısı. Zamanlama sekmesinde "İşlenecek günler" (AutoLookbackDays exe.config'e yazılır). Çalışma Günlüğü'nde "Günlükleri Temizle…".
 - 16.10.2026 — "Zamanlama" sekmesi + ScheduledTaskManager (Görev Zamanlayıcı COM); gerçek görevle test; Program.ReleaseSingleInstance (Şimdi Çalıştır için).
 - 16.10.2026 — Kullanıcı sunucuda manuel modu doğruladı; VS'den paket sürümleri güncellendi (ClosedXML 0.105.1, Costura 6.2.0, Fody 6.9.3).
 - 16.10.2026 — Release derlemesi + /auto duman testi + manuel UI görsel kontrolü (bu makinede).

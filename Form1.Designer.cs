@@ -36,8 +36,6 @@
             this.btnKopyala = new System.Windows.Forms.Button();
             this.btnBasla = new System.Windows.Forms.Button();
             this.btnHedefAc = new System.Windows.Forms.Button();
-            this.panelBottom = new System.Windows.Forms.Panel();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.tabGunluk = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.lvRuns = new System.Windows.Forms.ListView();
@@ -45,6 +43,7 @@
             this.btnGunlukYenile = new System.Windows.Forms.Button();
             this.btnLogDosyasi = new System.Windows.Forms.Button();
             this.btnLogKlasoru = new System.Windows.Forms.Button();
+            this.btnGunlukTemizle = new System.Windows.Forms.Button();
             this.lblGunlukBilgi = new System.Windows.Forms.Label();
             this.lvLines = new System.Windows.Forms.ListView();
             this.flowLinesTop = new System.Windows.Forms.FlowLayoutPanel();
@@ -74,15 +73,18 @@
             this.btnGorevSimdi = new System.Windows.Forms.Button();
             this.btnGorevYenile = new System.Windows.Forms.Button();
             this.btnGorevZamanlayici = new System.Windows.Forms.Button();
+            this.lblGorevGun = new System.Windows.Forms.Label();
+            this.numLookback = new System.Windows.Forms.NumericUpDown();
+            this.lblGorevGunAciklama = new System.Windows.Forms.Label();
             this.lblGorevNot = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsProgress = new System.Windows.Forms.ToolStripProgressBar();
             this.lblHedef = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblMode = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabControl1.SuspendLayout();
             this.tabIslemler.SuspendLayout();
             this.flowTop.SuspendLayout();
-            this.panelBottom.SuspendLayout();
             this.tabGunluk.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -93,6 +95,7 @@
             this.tabZamanlama.SuspendLayout();
             this.grpGorevDurum.SuspendLayout();
             this.grpGorevAyar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numLookback)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             //
@@ -112,7 +115,6 @@
             //
             this.tabIslemler.Controls.Add(this.listView1);
             this.tabIslemler.Controls.Add(this.flowTop);
-            this.tabIslemler.Controls.Add(this.panelBottom);
             this.tabIslemler.Location = new System.Drawing.Point(4, 22);
             this.tabIslemler.Name = "tabIslemler";
             this.tabIslemler.Padding = new System.Windows.Forms.Padding(3);
@@ -139,7 +141,7 @@
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(3, 39);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(1120, 523);
+            this.listView1.Size = new System.Drawing.Size(1120, 551);
             this.listView1.TabIndex = 1;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -291,24 +293,6 @@
             this.btnHedefAc.UseVisualStyleBackColor = true;
             this.btnHedefAc.Click += new System.EventHandler(this.btnHedefAc_Click);
             //
-            // panelBottom
-            //
-            this.panelBottom.Controls.Add(this.progressBar1);
-            this.panelBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelBottom.Location = new System.Drawing.Point(3, 562);
-            this.panelBottom.Name = "panelBottom";
-            this.panelBottom.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-            this.panelBottom.Size = new System.Drawing.Size(1120, 28);
-            this.panelBottom.TabIndex = 2;
-            //
-            // progressBar1
-            //
-            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.progressBar1.Location = new System.Drawing.Point(0, 4);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(1120, 24);
-            this.progressBar1.TabIndex = 0;
-            //
             // tabGunluk
             //
             this.tabGunluk.Controls.Add(this.splitContainer1);
@@ -360,6 +344,7 @@
             this.flowRunsTop.Controls.Add(this.btnGunlukYenile);
             this.flowRunsTop.Controls.Add(this.btnLogDosyasi);
             this.flowRunsTop.Controls.Add(this.btnLogKlasoru);
+            this.flowRunsTop.Controls.Add(this.btnGunlukTemizle);
             this.flowRunsTop.Controls.Add(this.lblGunlukBilgi);
             this.flowRunsTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.flowRunsTop.Location = new System.Drawing.Point(0, 0);
@@ -398,6 +383,16 @@
             this.btnLogKlasoru.Text = "Günlük Klasörünü Aç";
             this.btnLogKlasoru.UseVisualStyleBackColor = true;
             this.btnLogKlasoru.Click += new System.EventHandler(this.btnLogKlasoru_Click);
+            //
+            // btnGunlukTemizle
+            //
+            this.btnGunlukTemizle.Location = new System.Drawing.Point(376, 5);
+            this.btnGunlukTemizle.Name = "btnGunlukTemizle";
+            this.btnGunlukTemizle.Size = new System.Drawing.Size(140, 24);
+            this.btnGunlukTemizle.TabIndex = 4;
+            this.btnGunlukTemizle.Text = "Günlükleri Temizle...";
+            this.btnGunlukTemizle.UseVisualStyleBackColor = true;
+            this.btnGunlukTemizle.Click += new System.EventHandler(this.btnGunlukTemizle_Click);
             //
             // lblGunlukBilgi
             //
@@ -562,9 +557,12 @@
             this.grpGorevAyar.Controls.Add(this.btnGorevSimdi);
             this.grpGorevAyar.Controls.Add(this.btnGorevYenile);
             this.grpGorevAyar.Controls.Add(this.btnGorevZamanlayici);
+            this.grpGorevAyar.Controls.Add(this.lblGorevGun);
+            this.grpGorevAyar.Controls.Add(this.numLookback);
+            this.grpGorevAyar.Controls.Add(this.lblGorevGunAciklama);
             this.grpGorevAyar.Location = new System.Drawing.Point(12, 142);
             this.grpGorevAyar.Name = "grpGorevAyar";
-            this.grpGorevAyar.Size = new System.Drawing.Size(1100, 135);
+            this.grpGorevAyar.Size = new System.Drawing.Size(1100, 168);
             this.grpGorevAyar.TabIndex = 1;
             this.grpGorevAyar.TabStop = false;
             this.grpGorevAyar.Text = "Ayarla";
@@ -666,7 +664,7 @@
             //
             // btnGorevKur
             //
-            this.btnGorevKur.Location = new System.Drawing.Point(12, 92);
+            this.btnGorevKur.Location = new System.Drawing.Point(12, 124);
             this.btnGorevKur.Name = "btnGorevKur";
             this.btnGorevKur.Size = new System.Drawing.Size(170, 27);
             this.btnGorevKur.TabIndex = 10;
@@ -676,7 +674,7 @@
             //
             // btnGorevKaldir
             //
-            this.btnGorevKaldir.Location = new System.Drawing.Point(190, 92);
+            this.btnGorevKaldir.Location = new System.Drawing.Point(190, 124);
             this.btnGorevKaldir.Name = "btnGorevKaldir";
             this.btnGorevKaldir.Size = new System.Drawing.Size(120, 27);
             this.btnGorevKaldir.TabIndex = 11;
@@ -686,7 +684,7 @@
             //
             // btnGorevSimdi
             //
-            this.btnGorevSimdi.Location = new System.Drawing.Point(318, 92);
+            this.btnGorevSimdi.Location = new System.Drawing.Point(318, 124);
             this.btnGorevSimdi.Name = "btnGorevSimdi";
             this.btnGorevSimdi.Size = new System.Drawing.Size(170, 27);
             this.btnGorevSimdi.TabIndex = 12;
@@ -696,7 +694,7 @@
             //
             // btnGorevYenile
             //
-            this.btnGorevYenile.Location = new System.Drawing.Point(496, 92);
+            this.btnGorevYenile.Location = new System.Drawing.Point(496, 124);
             this.btnGorevYenile.Name = "btnGorevYenile";
             this.btnGorevYenile.Size = new System.Drawing.Size(90, 27);
             this.btnGorevYenile.TabIndex = 13;
@@ -706,7 +704,7 @@
             //
             // btnGorevZamanlayici
             //
-            this.btnGorevZamanlayici.Location = new System.Drawing.Point(594, 92);
+            this.btnGorevZamanlayici.Location = new System.Drawing.Point(594, 124);
             this.btnGorevZamanlayici.Name = "btnGorevZamanlayici";
             this.btnGorevZamanlayici.Size = new System.Drawing.Size(200, 27);
             this.btnGorevZamanlayici.TabIndex = 14;
@@ -714,20 +712,47 @@
             this.btnGorevZamanlayici.UseVisualStyleBackColor = true;
             this.btnGorevZamanlayici.Click += new System.EventHandler(this.btnGorevZamanlayici_Click);
             //
+            // lblGorevGun
+            //
+            this.lblGorevGun.AutoSize = true;
+            this.lblGorevGun.Location = new System.Drawing.Point(12, 95);
+            this.lblGorevGun.Name = "lblGorevGun";
+            this.lblGorevGun.Size = new System.Drawing.Size(190, 13);
+            this.lblGorevGun.TabIndex = 15;
+            this.lblGorevGun.Text = "Otomatik çalışmada işlenecek günler:";
+            //
+            // numLookback
+            //
+            this.numLookback.Location = new System.Drawing.Point(214, 91);
+            this.numLookback.Maximum = new decimal(new int[] { 30, 0, 0, 0 });
+            this.numLookback.Name = "numLookback";
+            this.numLookback.Size = new System.Drawing.Size(52, 20);
+            this.numLookback.TabIndex = 16;
+            //
+            // lblGorevGunAciklama
+            //
+            this.lblGorevGunAciklama.AutoSize = true;
+            this.lblGorevGunAciklama.Location = new System.Drawing.Point(272, 95);
+            this.lblGorevGunAciklama.Name = "lblGorevGunAciklama";
+            this.lblGorevGunAciklama.Size = new System.Drawing.Size(300, 13);
+            this.lblGorevGunAciklama.TabIndex = 17;
+            this.lblGorevGunAciklama.Text = "gün geriye (0 = yalnızca çalıştığı günün iş emirleri; 1 = dün ve bugün)";
+            //
             // lblGorevNot
             //
             this.lblGorevNot.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGorevNot.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.lblGorevNot.Location = new System.Drawing.Point(12, 290);
+            this.lblGorevNot.Location = new System.Drawing.Point(12, 322);
             this.lblGorevNot.Name = "lblGorevNot";
-            this.lblGorevNot.Size = new System.Drawing.Size(1100, 120);
+            this.lblGorevNot.Size = new System.Drawing.Size(1100, 140);
             this.lblGorevNot.TabIndex = 2;
             //
             // statusStrip1
             //
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblStatus,
+            this.tsProgress,
             this.lblHedef,
             this.lblMode});
             this.statusStrip1.Location = new System.Drawing.Point(0, 619);
@@ -742,6 +767,12 @@
             this.lblStatus.Spring = true;
             this.lblStatus.Text = "Hazır";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // tsProgress
+            //
+            this.tsProgress.Name = "tsProgress";
+            this.tsProgress.Size = new System.Drawing.Size(220, 16);
+            this.tsProgress.Visible = false;
             //
             // lblHedef
             //
@@ -777,7 +808,6 @@
             this.tabIslemler.ResumeLayout(false);
             this.flowTop.ResumeLayout(false);
             this.flowTop.PerformLayout();
-            this.panelBottom.ResumeLayout(false);
             this.tabGunluk.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
@@ -792,6 +822,7 @@
             this.grpGorevDurum.PerformLayout();
             this.grpGorevAyar.ResumeLayout(false);
             this.grpGorevAyar.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numLookback)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -822,8 +853,6 @@
         private System.Windows.Forms.Button btnKopyala;
         private System.Windows.Forms.Button btnBasla;
         private System.Windows.Forms.Button btnHedefAc;
-        private System.Windows.Forms.Panel panelBottom;
-        private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.TabPage tabGunluk;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ListView lvRuns;
@@ -831,6 +860,7 @@
         private System.Windows.Forms.Button btnGunlukYenile;
         private System.Windows.Forms.Button btnLogDosyasi;
         private System.Windows.Forms.Button btnLogKlasoru;
+        private System.Windows.Forms.Button btnGunlukTemizle;
         private System.Windows.Forms.Label lblGunlukBilgi;
         private System.Windows.Forms.ListView lvLines;
         private System.Windows.Forms.FlowLayoutPanel flowLinesTop;
@@ -860,9 +890,13 @@
         private System.Windows.Forms.Button btnGorevSimdi;
         private System.Windows.Forms.Button btnGorevYenile;
         private System.Windows.Forms.Button btnGorevZamanlayici;
+        private System.Windows.Forms.Label lblGorevGun;
+        private System.Windows.Forms.NumericUpDown numLookback;
+        private System.Windows.Forms.Label lblGorevGunAciklama;
         private System.Windows.Forms.Label lblGorevNot;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.ToolStripProgressBar tsProgress;
         private System.Windows.Forms.ToolStripStatusLabel lblHedef;
         private System.Windows.Forms.ToolStripStatusLabel lblMode;
     }

@@ -27,6 +27,8 @@ namespace ProductionDocumentationSync
         public static int AutoLookbackDays { get; private set; }
         /// <summary>/auto modunda azami çalışma süresi (dakika). 0 = sınırsız.</summary>
         public static int AutoTimeoutMinutes { get; private set; }
+        /// <summary>/auto modunda iş bitince pencerenin özetle açık kalacağı süre (saniye). 0 = hemen kapan.</summary>
+        public static int AutoCloseDelaySeconds { get; private set; }
 
         static AppConfig()
         {
@@ -36,6 +38,7 @@ namespace ProductionDocumentationSync
             PdmVault = Get("PdmVault", "BERRMAK");
             AutoLookbackDays = GetInt("AutoLookbackDays", 0);
             AutoTimeoutMinutes = GetInt("AutoTimeoutMinutes", 120);
+            AutoCloseDelaySeconds = GetInt("AutoCloseDelaySeconds", 10);
 
             string cs = null;
             try
@@ -99,6 +102,19 @@ namespace ProductionDocumentationSync
             return list;
         }
 
+        /// <summary>AutoLookbackDays değerini exe.config'e yazar (uygulama içinden ayarlanabilsin diye).</summary>
+        public static void SaveAutoLookbackDays(int days)
+        {
+            days = Math.Max(0, Math.Min(365, days));
+            var cfg = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var s = cfg.AppSettings.Settings;
+            if (s["AutoLookbackDays"] == null) s.Add("AutoLookbackDays", days.ToString());
+            else s["AutoLookbackDays"].Value = days.ToString();
+            cfg.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+            AutoLookbackDays = days;
+        }
+
         public static string Describe()
         {
             return "TargetRoot=" + TargetRoot +
@@ -106,7 +122,8 @@ namespace ProductionDocumentationSync
                    " | LogDir=" + LogDir +
                    " | Vault=" + PdmVault +
                    " | AutoLookbackDays=" + AutoLookbackDays +
-                   " | AutoTimeoutMinutes=" + AutoTimeoutMinutes;
+                   " | AutoTimeoutMinutes=" + AutoTimeoutMinutes +
+                   " | AutoCloseDelaySeconds=" + AutoCloseDelaySeconds;
         }
     }
 }

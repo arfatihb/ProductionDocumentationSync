@@ -24,6 +24,7 @@ namespace ProductionDocumentationSync
         public bool Completed;
         public bool Crashed;
         public bool TimedOut;
+        public bool Skipped;         // pencere açık olduğu için otomatik çalışma atlandı
         public bool HasCopy;
 
         public TimeSpan? Duration
@@ -35,6 +36,7 @@ namespace ProductionDocumentationSync
         {
             get
             {
+                if (Skipped) return "Atlandı (pencere açıktı)";
                 if (Crashed) return "Çöktü";
                 if (TimedOut) return "Zaman aşımı";
                 if (!Completed) return "Yarım kaldı";
@@ -46,7 +48,7 @@ namespace ProductionDocumentationSync
 
         public bool IsProblem
         {
-            get { return Crashed || TimedOut || !Completed || CopyFail > 0 || Fails > 0; }
+            get { return Skipped || Crashed || TimedOut || !Completed || CopyFail > 0 || Fails > 0; }
         }
     }
 
@@ -70,6 +72,35 @@ namespace ProductionDocumentationSync
                 catch { /* bozuk dosya: atla */ }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Günlük klasöründeki Run_*.log / Run_*.xlsx / Crash_*.log dosyalarından keepDays günden eski olanları siler
+        /// (keepDays 0 = hepsi). exclude içindeki dosyalara (bu oturum) dokunmaz. Silinen dosya sayısını döner.
+        /// </summary>
+        public static int Cleanup(string logDir, int keepDays, IEnumerable<string> exclude, out int failed)
+        {
+            failed = 0;
+            int deleted = 0;
+            if (string.IsNullOrEmpty(logDir) || !Directory.Exists(logDir)) return 0;
+            var skip = new HashSet<string>(exclude ?? new string[0], StringComparer.OrdinalIgnoreCase);
+            DateTime cutoff = DateTime.Now.AddDays(-Math.Max(0, keepDays));
+
+            foreach (var pattern in new[] { "Run_*.log", "Run_*.xlsx", "Crash_*.log" })
+            {
+                foreach (var f in Directory.GetFiles(logDir, pattern))
+                {
+                    if (skip.Contains(f)) continue;
+                    try
+                    {
+                        if (keepDays > 0 && File.GetLastWriteTime(f) >= cutoff) continue;
+                        File.Delete(f);
+                        deleted++;
+                    }
+                    catch { failed++; }
+                }
+            }
+            return deleted;
         }
 
         public static List<LogEntry> ReadEntries(string path)
@@ -149,6 +180,7 @@ namespace ProductionDocumentationSync
                 else if (e.Step == "COPY_ALL" || e.Step == "DONE") s.HasCopy = true;
                 else if (e.Step == "CRASH") s.Crashed = true;
                 else if (e.Step == "TIMEOUT") s.TimedOut = true;
+                else if (e.Step == "SKIP") s.Skipped = true;
 
                 if (e.Level == "FAIL") s.Fails++;
                 else if (e.Level == "WARN") s.Warns++;

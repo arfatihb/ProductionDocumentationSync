@@ -33,7 +33,9 @@ Plan ve güncel durum: [docs/PLAN.md](docs/PLAN.md), [docs/STATUS.md](docs/STATU
 7. Otomatik test: `Tools\Run-Auto-Test.cmd` → pencere açılır, çalışır, kendini kapatır; çıkış kodu gösterilir.
 8. Görevi kurun: uygulamada **Zamanlama** sekmesi → saat ve günleri seçin → **Görevi Kur / Güncelle**.
    Aynı sekmede görevin durumu, sonraki/son çalışma ve son sonuç görünür; **Şimdi Çalıştır (test)** görevi hemen
-   tetikler (pencere kapanır, otomatik çalışma ayrı açılıp biter). Komut satırı alternatifi:
+   tetikler (pencere kapanır, otomatik çalışma ayrı açılıp biter). "İşlenecek günler" alanı otomatik çalışmanın
+   kaç gün geriye bakacağını belirler (0 = yalnızca çalıştığı günün iş emirleri; exe.config'e kaydedilir).
+   Komut satırı alternatifi:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\Register-AutoTask.ps1 -ExePath "D:\Apps\ProductionDocumentationSync\ProductionDocumentationSync.exe" -Time 07:00
@@ -53,6 +55,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Register-AutoTask.ps1 -ExePath 
 | `PdmVault` | `BERRMAK` | PDM kasa adı |
 | `AutoLookbackDays` | `0` | `/auto` modunda bugünden kaç gün geriye bakılsın |
 | `AutoTimeoutMinutes` | `120` | `/auto` modunda azami süre; aşılırsa çıkış kodu 3 |
+| `AutoCloseDelaySeconds` | `10` | `/auto` bitince pencerenin özetle açık kalacağı süre (0 = hemen kapan) |
 | `connectionStrings/Sap` | – | SAP veritabanı bağlantısı |
 
 ## Çıkış kodları (`/auto`)
@@ -68,9 +71,20 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Register-AutoTask.ps1 -ExePath 
 
 Görev Zamanlayıcı'da "Son Çalıştırma Sonucu" sütunu bu kodu gösterir (0x0, 0x2 ...).
 
+## Otomatik çalışma sırasında ne görünür?
+
+- Pencere açılır (Çalışma Günlüğü sekmesinde canlı akış), **pencere başlığı** ve dolayısıyla görev çubuğu düğmesi
+  "Kopyalanıyor (12/80): ..." şeklinde ilerler; görev çubuğu düğmesinde yeşil ilerleme dolgusu görünür.
+- Sistem tepsisinde uygulama simgesi durur; üzerine gelince ilerleme, başlangıç ve bitişte balon bildirimi çıkar.
+- İş bitince özet `AutoCloseDelaySeconds` kadar (varsayılan 10 sn) ekranda kalır, sonra pencere kendini kapatır.
+- Uygulamayı yeniden açarsanız ikinci bir kopya açılmaz; **çalışan pencere öne getirilir**.
+- Görev saatinde pencere zaten açıksa otomatik çalışma **atlanır**: açık pencerede uyarı çıkar, Çalışma Günlüğü'nde
+  "Atlandı (pencere açıktı)" satırı ve Zamanlama sekmesinde sonuç 4 görünür. Görev bir sonraki zamanında yine çalışır.
+
 ## Günlükler
 
 Her çalışma `LogDir\Run_<tarih>_<kullanıcı>.log` (sekmeyle ayrılmış, anında yazılır) ve bitişte aynı içerikle
 `Run_*.xlsx` üretir. Uygulamadaki **Çalışma Günlüğü** sekmesi bu dosyaları okuyup çalışma listesi
 (başlangıç, mod, süre, sonuç, PDF OK/hata, Excel) ve satır ayrıntısı olarak gösterir; "Sadece hata / uyarı" filtresi
-ve arama vardır. Satıra çift tıklayınca ilgili dosya/klasör Explorer'da açılır.
+ve arama vardır. Satıra çift tıklayınca ilgili dosya/klasör Explorer'da açılır. **Günlükleri Temizle…** düğmesi
+N günden eski `Run_*` ve `Crash_*` dosyalarını siler (açık oturumun dosyasına dokunmaz).

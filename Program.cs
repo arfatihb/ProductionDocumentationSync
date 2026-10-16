@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,10 +28,35 @@ namespace ProductionDocumentationSync
             _singleInstance = new Mutex(true, @"Local\ProductionDocumentationSync_SingleInstance", out createdNew);
             if (!createdNew)
             {
-                WriteCrashFile(null, mode, "Uygulama zaten çalışıyor; bu örnek kapatıldı (ExitCode=4).");
-                if (!isAuto)
+                IntPtr other = FindOtherInstanceWindow();
+                if (isAuto)
+                {
+                    // Zamanlanmış çalışma: pencere açık. Günlüğe "atlandı" yaz, açık pencereye haber ver.
+                    try
+                    {
+                        var lg = new RunLogger(AppConfig.LogDir, "AUTO");
+                        lg.Log("INFO", "SESSION", "Started", path: "AUTO");
+                        lg.Log("WARN", "SKIP", "Zamanlanmış çalışma atlandı: uygulama penceresi zaten açıktı (ExitCode=4)");
+                        lg.Finish("Atlandı | ExitCode=4");
+                    }
+                    catch { }
+                    if (other != IntPtr.Zero)
+                        NativeMethods.PostMessage(other, NativeMethods.WM_APP_NOTIFY, (IntPtr)1, IntPtr.Zero);
+                    return 4;
+                }
+
+                // Manuel: açık pencereyi öne getir
+                if (other != IntPtr.Zero)
+                {
+                    if (NativeMethods.IsIconic(other)) NativeMethods.ShowWindow(other, NativeMethods.SW_RESTORE);
+                    NativeMethods.SetForegroundWindow(other);
+                    NativeMethods.PostMessage(other, NativeMethods.WM_APP_NOTIFY, (IntPtr)2, IntPtr.Zero);
+                }
+                else
+                {
                     MessageBox.Show("Uygulama zaten çalışıyor.", "Üretim Doküman Senkronizasyonu",
                                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
                 return 4;
             }
 
@@ -75,6 +101,25 @@ namespace ProductionDocumentationSync
             MessageBox.Show("Beklenmeyen hata:\n" + ex.Message +
                             "\n\nAyrıntı: " + (logger != null ? logger.TxtPath : AppConfig.LogDir),
                             "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        /// <summary>Çalışan diğer örneğin ana pencere tutamacı; yoksa IntPtr.Zero.</summary>
+        private static IntPtr FindOtherInstanceWindow()
+        {
+            try
+            {
+                var me = Process.GetCurrentProcess();
+                foreach (var p in Process.GetProcessesByName(me.ProcessName))
+                {
+                    try
+                    {
+                        if (p.Id != me.Id && p.MainWindowHandle != IntPtr.Zero) return p.MainWindowHandle;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            return IntPtr.Zero;
         }
 
         /// <summary>Günlük nesnesi daha oluşmamışken (ya da çökerken) bağımsız bir dosyaya yazar.</summary>

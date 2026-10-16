@@ -33,6 +33,8 @@ sorununun giderilmesi.
 | 16.10.2026 | `Başla` düğmesi "Listele + Kopyala" olarak bağlandı; Kopyala listesiz basılırsa uyarır | Eksik davranış |
 | 16.10.2026 | Operasyonu (Kaynak Kodu) olmayan ürün "Operasyon yok" olarak işaretlenir (eskiden "Kopyalandı" görünüyordu) | Yanıltıcı durum |
 | 16.10.2026 | Zamanlama uygulama içinden: "Zamanlama" sekmesi, Schedule.Service COM API (geç bağlama, ek paket yok) ile görev kur/güncelle/kaldır/şimdi çalıştır + durum; saat ve günler seçilebilir | Kullanıcı saati script'siz, Windows görevi gibi ayarlamak istedi |
+| 16.10.2026 | Otomatik çalışma görünürlüğü: ilerleme durum çubuğunda (her sekmede) + pencere başlığında + görev çubuğu düğmesinde (ITaskbarList3) + tepsi simgesi/balon; bitince özet `AutoCloseDelaySeconds` (10 sn) sonra kapanır; ikinci örnek açılırsa çalışan pencere öne gelir (WM_APP mesajı); görev pencere açıkken tetiklenirse günlükte SKIP + açık pencerede uyarı | Kullanıcı arka planda çalıştığını göremiyor, yeniden açınca ne olacağını bilmiyordu |
+| 16.10.2026 | "İşlenecek günler" (AutoLookbackDays) Zamanlama sekmesinden ayarlanır, exe.config'e yazılır; "Günlükleri Temizle…" N günden eski Run_/Crash_ dosyalarını siler | Kullanıcı isteği |
 
 ## Vazgeçilenler
 - PDM interop için stub/taklit ile derleme doğrulaması — vazgeçildi: kullanıcı gerçek ortam kurdu (VS 2022 + PDM istemcisi).
