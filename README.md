@@ -31,14 +31,17 @@ Plan ve güncel durum: [docs/PLAN.md](docs/PLAN.md), [docs/STATUS.md](docs/STATU
 6. Elle test: exe'yi açın → **Listele** → **Kopyala** (ya da **Listele + Kopyala**). Sonuçlar ve hatalar
    **Çalışma Günlüğü** sekmesinde.
 7. Otomatik test: `Tools\Run-Auto-Test.cmd` → pencere açılır, çalışır, kendini kapatır; çıkış kodu gösterilir.
-8. Görevi kurun (PowerShell, görevin sahibi olacak kullanıcıyla):
+8. Görevi kurun: uygulamada **Zamanlama** sekmesi → saat ve günleri seçin → **Görevi Kur / Güncelle**.
+   Aynı sekmede görevin durumu, sonraki/son çalışma ve son sonuç görünür; **Şimdi Çalıştır (test)** görevi hemen
+   tetikler (pencere kapanır, otomatik çalışma ayrı açılıp biter). Komut satırı alternatifi:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\Register-AutoTask.ps1 -ExePath "D:\Apps\ProductionDocumentationSync\ProductionDocumentationSync.exe" -Time 07:00
 ```
 
 > Görev **"yalnızca kullanıcı oturum açtığında"** çalışacak şekilde kurulur; PDM istemcisi etkileşimsiz oturumda
-> çalışmaz. Sunucuda bu kullanıcının oturumu açık kalmalıdır (ekran kilitlenebilir).
+> çalışmaz. Sunucuda bu kullanıcının oturumu açık kalmalıdır (ekran kilitlenebilir). Görev saatinde uygulama
+> penceresi açıksa görev "zaten çalışıyor" (4) ile atlanır; işiniz bitince pencereyi kapatın.
 
 ## Ayarlar (`ProductionDocumentationSync.exe.config`)
 

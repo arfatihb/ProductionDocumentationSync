@@ -13,6 +13,8 @@ namespace ProductionDocumentationSync
     /// </summary>
     static class Program
     {
+        private static Mutex _singleInstance;
+
         [STAThread]
         static int Main(string[] args)
         {
@@ -22,28 +24,39 @@ namespace ProductionDocumentationSync
             string mode = isAuto ? "AUTO" : "MANUAL";
 
             bool createdNew;
-            using (var mutex = new Mutex(true, @"Local\ProductionDocumentationSync_SingleInstance", out createdNew))
+            _singleInstance = new Mutex(true, @"Local\ProductionDocumentationSync_SingleInstance", out createdNew);
+            if (!createdNew)
             {
-                if (!createdNew)
-                {
-                    WriteCrashFile(null, mode, "Uygulama zaten çalışıyor; bu örnek kapatıldı (ExitCode=4).");
-                    if (!isAuto)
-                        MessageBox.Show("Uygulama zaten çalışıyor.", "Üretim Doküman Senkronizasyonu",
-                                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return 4;
-                }
-
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += (s, e) => HandleFatal(e.Exception, isAuto);
-                AppDomain.CurrentDomain.UnhandledException += (s, e) => HandleFatal(e.ExceptionObject as Exception, isAuto);
-
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new Form1(isAuto));
-
-                GC.KeepAlive(mutex);
-                return Environment.ExitCode;
+                WriteCrashFile(null, mode, "Uygulama zaten çalışıyor; bu örnek kapatıldı (ExitCode=4).");
+                if (!isAuto)
+                    MessageBox.Show("Uygulama zaten çalışıyor.", "Üretim Doküman Senkronizasyonu",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return 4;
             }
+
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) => HandleFatal(e.Exception, isAuto);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => HandleFatal(e.ExceptionObject as Exception, isAuto);
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1(isAuto));
+
+            ReleaseSingleInstance();
+            return Environment.ExitCode;
+        }
+
+        /// <summary>
+        /// Tek örnek kilidini bırakır. Pencere kapanmadan hemen önce görev elle başlatılırken kullanılır;
+        /// böylece /auto örneği "zaten çalışıyor" (4) ile atlanmaz.
+        /// </summary>
+        public static void ReleaseSingleInstance()
+        {
+            var m = _singleInstance;
+            _singleInstance = null;
+            if (m == null) return;
+            try { m.ReleaseMutex(); } catch { }
+            try { m.Dispose(); } catch { }
         }
 
         private static void HandleFatal(Exception ex, bool isAuto)

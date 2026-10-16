@@ -83,6 +83,7 @@ namespace ProductionDocumentationSync
             }
 
             RefreshRuns();
+            if (!_isAuto) RefreshTaskUi();
             SetStatus("Hazır");
 
             if (_configFatal)
@@ -942,6 +943,163 @@ namespace ProductionDocumentationSync
             {
                 MessageBox.Show("Açılamadı: " + ex.Message, "Aç", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        // ------------------------------------------------------------------
+        // Zamanlama sekmesi (Windows Görev Zamanlayıcı)
+        // ------------------------------------------------------------------
+        private CheckBox[] DayChecks
+        {
+            get { return new[] { chkGun1, chkGun2, chkGun3, chkGun4, chkGun5, chkGun6, chkGun7 }; }
+        }
+
+        private void RefreshTaskUi()
+        {
+            string exe = Application.ExecutablePath;
+            string user = Environment.UserDomainName + "\\" + Environment.UserName;
+            lblGorevNot.Text =
+                "Görev \"yalnızca kullanıcı oturum açtığında\" çalışacak şekilde kurulur; SOLIDWORKS PDM istemcisi etkileşimsiz oturumda " +
+                "çalışmadığı için bu zorunludur. Bu bilgisayarda " + user + " oturumunun açık kalması gerekir (ekran kilitli olabilir).\r\n" +
+                "Görev şu programı /auto ile başlatır: " + exe + "\r\n" +
+                "Görev saatinde bu pencere açıksa görev \"zaten çalışıyor\" (sonuç 4) ile atlanır; işiniz bitince pencereyi kapatın. " +
+                "Sonuçlar \"Çalışma Günlüğü\" sekmesinde görünür.";
+
+            ScheduledTaskInfo info = ScheduledTaskManager.Query();
+            lblGorevProgram.ForeColor = SystemColors.ControlText;
+
+            if (info.Error != null)
+            {
+                lblGorevDurum.Text = "Görev bilgisi alınamadı: " + info.Error;
+                lblGorevDurum.ForeColor = Color.Firebrick;
+                lblGorevSonraki.Text = "Sonraki çalışma: -";
+                lblGorevSon.Text = "Son çalışma: -";
+                lblGorevProgram.Text = "Program: -";
+                btnGorevKaldir.Enabled = btnGorevSimdi.Enabled = false;
+                return;
+            }
+
+            if (!info.Exists)
+            {
+                lblGorevDurum.Text = "Zamanlanmış görev KURULU DEĞİL";
+                lblGorevDurum.ForeColor = Color.Firebrick;
+                lblGorevSonraki.Text = "Sonraki çalışma: -";
+                lblGorevSon.Text = "Son çalışma: -";
+                lblGorevProgram.Text = "Program: -";
+                btnGorevKaldir.Enabled = btnGorevSimdi.Enabled = false;
+                btnGorevKur.Text = "Görevi Kur";
+                return;
+            }
+
+            lblGorevDurum.Text = "Zamanlanmış görev KURULU: " + info.ScheduleText +
+                                 "   [" + info.StateText + (info.Enabled ? "" : ", DEVRE DIŞI") + "]";
+            lblGorevDurum.ForeColor = info.Enabled ? Color.DarkGreen : Color.Firebrick;
+            lblGorevSonraki.Text = "Sonraki çalışma: " + (info.NextRun.HasValue ? info.NextRun.Value.ToString("dd.MM.yyyy HH:mm") : "-");
+            lblGorevSon.Text = "Son çalışma: " + (info.LastRun.HasValue ? info.LastRun.Value.ToString("dd.MM.yyyy HH:mm") : "-") +
+                               (info.LastResult.HasValue
+                                   ? "   Sonuç: " + ScheduledTaskManager.DescribeResult(info.LastResult.Value) + " (" + info.LastResult.Value + ")"
+                                   : "");
+
+            bool sameExe = string.Equals(info.ExePath, exe, StringComparison.OrdinalIgnoreCase);
+            lblGorevProgram.Text = "Program: " + info.ExePath + " " + info.Arguments + "   Kullanıcı: " + info.UserId +
+                                   (sameExe ? "" : "   (DİKKAT: görev başka bir programı gösteriyor; 'Görevi Güncelle' ile düzeltin)");
+            if (!sameExe) lblGorevProgram.ForeColor = Color.Firebrick;
+
+            dtpGorevSaat.Value = DateTime.Today.Add(info.Time);
+            var checks = DayChecks;
+            for (int i = 0; i < checks.Length; i++)
+                checks[i].Checked = (info.DaysMask & ScheduledTaskManager.DayBits[i]) != 0;
+
+            btnGorevKaldir.Enabled = btnGorevSimdi.Enabled = true;
+            btnGorevKur.Text = "Görevi Güncelle";
+        }
+
+        private int SelectedDaysMask()
+        {
+            int mask = 0;
+            var checks = DayChecks;
+            for (int i = 0; i < checks.Length; i++)
+                if (checks[i].Checked) mask |= ScheduledTaskManager.DayBits[i];
+            return mask;
+        }
+
+        private void btnGorevKur_Click(object sender, EventArgs e)
+        {
+            int mask = SelectedDaysMask();
+            if (mask == 0)
+            {
+                MessageBox.Show(this, "En az bir gün seçin.", "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            TimeSpan t = dtpGorevSaat.Value.TimeOfDay;
+            TimeSpan time = new TimeSpan(t.Hours, t.Minutes, 0);
+            string schedule = ScheduledTaskManager.DescribeSchedule(time, mask);
+            try
+            {
+                ScheduledTaskManager.Register(time, mask, Application.ExecutablePath, "/auto");
+                _logger.Log("OK", "TASK", "Zamanlanmış görev kuruldu/güncellendi: " + schedule, path: Application.ExecutablePath);
+                RefreshTaskUi();
+                MessageBox.Show(this,
+                    "Görev kuruldu: " + schedule + "\n\nGörev yalnızca " + Environment.UserDomainName + "\\" + Environment.UserName +
+                    " oturumu açıkken çalışır. Denemek için \"Şimdi Çalıştır (test)\" düğmesini kullanabilirsiniz.",
+                    "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("FAIL", "TASK", "Görev kurulamadı: " + ex.Message);
+                MessageBox.Show(this, "Görev kurulamadı:\n" + ex.Message, "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnGorevKaldir_Click(object sender, EventArgs e)
+        {
+            var r = MessageBox.Show(this, "Zamanlanmış görev kaldırılsın mı? Otomatik çalışma duracak.", "Görevi Kaldır",
+                                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r != DialogResult.Yes) return;
+            try
+            {
+                ScheduledTaskManager.Remove();
+                _logger.Log("OK", "TASK", "Zamanlanmış görev kaldırıldı");
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("FAIL", "TASK", "Görev kaldırılamadı: " + ex.Message);
+                MessageBox.Show(this, "Görev kaldırılamadı:\n" + ex.Message, "Zamanlama", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            RefreshTaskUi();
+        }
+
+        private void btnGorevSimdi_Click(object sender, EventArgs e)
+        {
+            if (_busy)
+            {
+                MessageBox.Show(this, "Bir işlem sürüyor; bitmesini bekleyin.", "Şimdi Çalıştır", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            var r = MessageBox.Show(this,
+                "Görev şimdi başlatılacak. Aynı anda tek örnek çalışabildiği için bu pencere kapatılacak; otomatik çalışma " +
+                "ayrı bir pencerede açılır ve bitince kendini kapatır. Sonucu daha sonra bu sekmede ve Çalışma Günlüğü'nde görebilirsiniz.\n\nDevam edilsin mi?",
+                "Şimdi Çalıştır", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r != DialogResult.Yes) return;
+            try
+            {
+                _logger.Log("INFO", "TASK", "Görev elle başlatıldı (Şimdi Çalıştır)");
+                Program.ReleaseSingleInstance();
+                ScheduledTaskManager.RunNow();
+                Close();
+            }
+            catch (Exception ex)
+            {
+                _logger.Log("FAIL", "TASK", "Görev başlatılamadı: " + ex.Message);
+                MessageBox.Show(this, "Görev başlatılamadı:\n" + ex.Message, "Şimdi Çalıştır", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnGorevYenile_Click(object sender, EventArgs e) { RefreshTaskUi(); }
+
+        private void btnGorevZamanlayici_Click(object sender, EventArgs e)
+        {
+            try { Process.Start("taskschd.msc"); }
+            catch (Exception ex) { MessageBox.Show(this, "Açılamadı: " + ex.Message, "Görev Zamanlayıcı", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         // ------------------------------------------------------------------

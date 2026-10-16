@@ -1,25 +1,23 @@
 # ProductionDocumentationSync — Durum
 
-Son güncelleme: 16 Ekim 2026 — Yerel hedef (D:\GebzeUretim), /auto düzeltmesi, günlük sekmesi ve csproj temizliği derlendi ve duman testi geçti; sırada yeni sunucuda gerçek test.
+Son güncelleme: 16 Ekim 2026 — Manuel mod sunucuda doğrulandı; uygulama içi "Zamanlama" sekmesi (Görev Zamanlayıcı kur/güncelle/kaldır/şimdi çalıştır) eklendi ve gerçek görev testi geçti. Push kimlik sorunu nedeniyle bekliyor.
 
 ## Şu an nerede kaldık
-Kod değişiklikleri tamamlandı, Release derlemesi bu makinede (VS 18 Community MSBuild) 0 hata / 0 uyarı ile alındı.
-Duman testi: `/auto` ile başlatıldığında uygulama kendiliğinden çalışıp SQL hatasını günlükledi, Run_*.log + Run_*.xlsx
-yazdı, kendini kapattı ve çıkış kodu 1 döndürdü (SQL sunucusuna bu laptoptan erişim yok; beklenen). Manuel modda
-iki sekme de düzgün açılıyor. PDM araması/kopyalama ve şablondan Excel üretimi bu makinede test EDİLEMEDİ
-(kasa ve SQL yok) — yeni sunucuda doğrulanacak.
+Kullanıcı yeni sunucuda manuel modu (Listele/Kopyala) sorunsuz çalıştırdı. İstek üzerine zamanlama uygulama içine
+alındı: "Zamanlama" sekmesinde saat + günler seçilip görev kuruluyor; durum, sonraki/son çalışma ve sonuç görünüyor.
+`ScheduledTaskManager` (Schedule.Service COM, geç bağlama) bu makinede ayrı bir test görev adıyla gerçek Görev
+Zamanlayıcı'ya karşı test edildi: haftalık kayıt, günlük güncelleme, şimdi çalıştır (sonuç 0), kaldırma → hepsi geçti.
+Release derlemesi 0 hata / 0 uyarı. Git: yerelde 2 commit ileride; push için `arfatihb` yetkili kimlik gerekiyor
+(makinedeki kayıtlı kimlik `fbgtadv`).
 
 ## Yarım kalan
-- Yok (kod tarafında). Sunucu testi bekleniyor.
+- Push (kimlik). Kod tarafında yarım iş yok.
 
 ## Sıradaki adımlar
-1. Yeni sunucuda kurulum (README.md "Sunucuya kurulum"): exe + exe.config + Tools\; `D:\GebzeUretim\Antet.xlsx`;
-   exe.config'de `Sap` bağlantısı ve `PdmVault` kontrolü.
-2. Elle test: Listele → Kopyala; Çalışma Günlüğü sekmesinde PDM/EXCEL satırlarını kontrol et.
-   Özellikle PDM'in arka plan iş parçacığından çalıştığını doğrula (günlükte `PDM Kasaya bağlanıldı` ve `COPY OK`).
-3. `Tools\Run-Auto-Test.cmd` → çıkış kodu 0 veya 2 beklenir.
-4. `Tools\Register-AutoTask.ps1 -ExePath ... -Time 07:00`; ertesi gün Çalışma Günlüğü sekmesinde AUTO satırı.
-5. Sorun çıkarsa `_Raporlar\Run_*.log` dosyasını paylaş; geri bildirime göre düzeltme.
+1. Push (VS Code Source Control ile `arfatihb` hesabı ya da Windows Kimlik Bilgileri'ndeki github kaydını güncelle).
+2. Sunucuda yeni exe'yi kopyala → Zamanlama sekmesi → saat/gün seç → "Görevi Kur" → "Şimdi Çalıştır (test)" ile dene.
+3. Ertesi gün Zamanlama sekmesinde "Son çalışma / Sonuç" ve Çalışma Günlüğü'nde AUTO satırını kontrol et.
+4. Sorun çıkarsa `_Raporlar\Run_*.log` dosyasını paylaş.
 
 ## Bilinen notlar
 - Uygulama 32-bit tercihli (anycpu32bitpreferred, eski derlemeyle aynı). PDM istemcisi 32-bit COM'u da kaydettiği için sorun beklenmiyor.
@@ -28,6 +26,8 @@ iki sekme de düzgün açılıyor. PDM araması/kopyalama ve şablondan Excel ü
 - Git Bash `/auto` argümanını yola çevirir; test için cmd/PowerShell ya da `Run-Auto-Test.cmd` kullan.
 
 ## Tamamlananlar (yeniden eskiye)
+- 16.10.2026 — "Zamanlama" sekmesi + ScheduledTaskManager (Görev Zamanlayıcı COM); gerçek görevle test; Program.ReleaseSingleInstance (Şimdi Çalıştır için).
+- 16.10.2026 — Kullanıcı sunucuda manuel modu doğruladı; VS'den paket sürümleri güncellendi (ClosedXML 0.105.1, Costura 6.2.0, Fody 6.9.3).
 - 16.10.2026 — Release derlemesi + /auto duman testi + manuel UI görsel kontrolü (bu makinede).
 - 16.10.2026 — RunLogger: dosya düzeyinde de yedek klasöre düşme; CRASH mesajında aşama (Listeleme/Kopyalama).
 - 16.10.2026 — App.config'e TargetRoot/TemplateXlsx/LogDir/PdmVault/AutoLookbackDays/AutoTimeoutMinutes + Sap bağlantısı; AppConfig.Validate başlangıç kontrolü.

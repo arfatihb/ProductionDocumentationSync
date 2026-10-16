@@ -32,6 +32,7 @@ sorununun giderilmesi.
 | 16.10.2026 | NuGet `PackageReference`'a geçildi, DevExpress referansları silindi, PDM interop yolu `lib\` → Program Files (2 varyant) sırasıyla aranır | Temiz makinede derlensin |
 | 16.10.2026 | `Başla` düğmesi "Listele + Kopyala" olarak bağlandı; Kopyala listesiz basılırsa uyarır | Eksik davranış |
 | 16.10.2026 | Operasyonu (Kaynak Kodu) olmayan ürün "Operasyon yok" olarak işaretlenir (eskiden "Kopyalandı" görünüyordu) | Yanıltıcı durum |
+| 16.10.2026 | Zamanlama uygulama içinden: "Zamanlama" sekmesi, Schedule.Service COM API (geç bağlama, ek paket yok) ile görev kur/güncelle/kaldır/şimdi çalıştır + durum; saat ve günler seçilebilir | Kullanıcı saati script'siz, Windows görevi gibi ayarlamak istedi |
 
 ## Vazgeçilenler
 - PDM interop için stub/taklit ile derleme doğrulaması — vazgeçildi: kullanıcı gerçek ortam kurdu (VS 2022 + PDM istemcisi).

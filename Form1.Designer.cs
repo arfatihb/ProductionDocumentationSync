@@ -52,6 +52,29 @@
             this.lblFiltre = new System.Windows.Forms.Label();
             this.txtFiltre = new System.Windows.Forms.TextBox();
             this.lblSatirBilgi = new System.Windows.Forms.Label();
+            this.tabZamanlama = new System.Windows.Forms.TabPage();
+            this.grpGorevDurum = new System.Windows.Forms.GroupBox();
+            this.lblGorevDurum = new System.Windows.Forms.Label();
+            this.lblGorevSonraki = new System.Windows.Forms.Label();
+            this.lblGorevSon = new System.Windows.Forms.Label();
+            this.lblGorevProgram = new System.Windows.Forms.Label();
+            this.grpGorevAyar = new System.Windows.Forms.GroupBox();
+            this.lblGorevSaat = new System.Windows.Forms.Label();
+            this.dtpGorevSaat = new System.Windows.Forms.DateTimePicker();
+            this.lblGorevGunler = new System.Windows.Forms.Label();
+            this.chkGun1 = new System.Windows.Forms.CheckBox();
+            this.chkGun2 = new System.Windows.Forms.CheckBox();
+            this.chkGun3 = new System.Windows.Forms.CheckBox();
+            this.chkGun4 = new System.Windows.Forms.CheckBox();
+            this.chkGun5 = new System.Windows.Forms.CheckBox();
+            this.chkGun6 = new System.Windows.Forms.CheckBox();
+            this.chkGun7 = new System.Windows.Forms.CheckBox();
+            this.btnGorevKur = new System.Windows.Forms.Button();
+            this.btnGorevKaldir = new System.Windows.Forms.Button();
+            this.btnGorevSimdi = new System.Windows.Forms.Button();
+            this.btnGorevYenile = new System.Windows.Forms.Button();
+            this.btnGorevZamanlayici = new System.Windows.Forms.Button();
+            this.lblGorevNot = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblHedef = new System.Windows.Forms.ToolStripStatusLabel();
@@ -67,6 +90,9 @@
             this.splitContainer1.SuspendLayout();
             this.flowRunsTop.SuspendLayout();
             this.flowLinesTop.SuspendLayout();
+            this.tabZamanlama.SuspendLayout();
+            this.grpGorevDurum.SuspendLayout();
+            this.grpGorevAyar.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             //
@@ -74,6 +100,7 @@
             //
             this.tabControl1.Controls.Add(this.tabIslemler);
             this.tabControl1.Controls.Add(this.tabGunluk);
+            this.tabControl1.Controls.Add(this.tabZamanlama);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -451,6 +478,252 @@
             this.lblSatirBilgi.Size = new System.Drawing.Size(0, 13);
             this.lblSatirBilgi.TabIndex = 3;
             //
+            // tabZamanlama
+            //
+            this.tabZamanlama.Controls.Add(this.grpGorevDurum);
+            this.tabZamanlama.Controls.Add(this.grpGorevAyar);
+            this.tabZamanlama.Controls.Add(this.lblGorevNot);
+            this.tabZamanlama.Location = new System.Drawing.Point(4, 22);
+            this.tabZamanlama.Name = "tabZamanlama";
+            this.tabZamanlama.Padding = new System.Windows.Forms.Padding(3);
+            this.tabZamanlama.Size = new System.Drawing.Size(1126, 593);
+            this.tabZamanlama.TabIndex = 2;
+            this.tabZamanlama.Text = "Zamanlama";
+            this.tabZamanlama.UseVisualStyleBackColor = true;
+            //
+            // grpGorevDurum
+            //
+            this.grpGorevDurum.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpGorevDurum.Controls.Add(this.lblGorevDurum);
+            this.grpGorevDurum.Controls.Add(this.lblGorevSonraki);
+            this.grpGorevDurum.Controls.Add(this.lblGorevSon);
+            this.grpGorevDurum.Controls.Add(this.lblGorevProgram);
+            this.grpGorevDurum.Location = new System.Drawing.Point(12, 12);
+            this.grpGorevDurum.Name = "grpGorevDurum";
+            this.grpGorevDurum.Size = new System.Drawing.Size(1100, 118);
+            this.grpGorevDurum.TabIndex = 0;
+            this.grpGorevDurum.TabStop = false;
+            this.grpGorevDurum.Text = "Zamanlanmış görev (Windows Görev Zamanlayıcı)";
+            //
+            // lblGorevDurum
+            //
+            this.lblGorevDurum.AutoSize = true;
+            this.lblGorevDurum.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
+            this.lblGorevDurum.Location = new System.Drawing.Point(12, 24);
+            this.lblGorevDurum.Name = "lblGorevDurum";
+            this.lblGorevDurum.Size = new System.Drawing.Size(190, 16);
+            this.lblGorevDurum.TabIndex = 0;
+            this.lblGorevDurum.Text = "Görev durumu sorgulanıyor...";
+            //
+            // lblGorevSonraki
+            //
+            this.lblGorevSonraki.AutoSize = true;
+            this.lblGorevSonraki.Location = new System.Drawing.Point(12, 50);
+            this.lblGorevSonraki.Name = "lblGorevSonraki";
+            this.lblGorevSonraki.Size = new System.Drawing.Size(100, 13);
+            this.lblGorevSonraki.TabIndex = 1;
+            this.lblGorevSonraki.Text = "Sonraki çalışma: -";
+            //
+            // lblGorevSon
+            //
+            this.lblGorevSon.AutoSize = true;
+            this.lblGorevSon.Location = new System.Drawing.Point(12, 70);
+            this.lblGorevSon.Name = "lblGorevSon";
+            this.lblGorevSon.Size = new System.Drawing.Size(85, 13);
+            this.lblGorevSon.TabIndex = 2;
+            this.lblGorevSon.Text = "Son çalışma: -";
+            //
+            // lblGorevProgram
+            //
+            this.lblGorevProgram.AutoSize = true;
+            this.lblGorevProgram.Location = new System.Drawing.Point(12, 90);
+            this.lblGorevProgram.Name = "lblGorevProgram";
+            this.lblGorevProgram.Size = new System.Drawing.Size(60, 13);
+            this.lblGorevProgram.TabIndex = 3;
+            this.lblGorevProgram.Text = "Program: -";
+            //
+            // grpGorevAyar
+            //
+            this.grpGorevAyar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpGorevAyar.Controls.Add(this.lblGorevSaat);
+            this.grpGorevAyar.Controls.Add(this.dtpGorevSaat);
+            this.grpGorevAyar.Controls.Add(this.lblGorevGunler);
+            this.grpGorevAyar.Controls.Add(this.chkGun1);
+            this.grpGorevAyar.Controls.Add(this.chkGun2);
+            this.grpGorevAyar.Controls.Add(this.chkGun3);
+            this.grpGorevAyar.Controls.Add(this.chkGun4);
+            this.grpGorevAyar.Controls.Add(this.chkGun5);
+            this.grpGorevAyar.Controls.Add(this.chkGun6);
+            this.grpGorevAyar.Controls.Add(this.chkGun7);
+            this.grpGorevAyar.Controls.Add(this.btnGorevKur);
+            this.grpGorevAyar.Controls.Add(this.btnGorevKaldir);
+            this.grpGorevAyar.Controls.Add(this.btnGorevSimdi);
+            this.grpGorevAyar.Controls.Add(this.btnGorevYenile);
+            this.grpGorevAyar.Controls.Add(this.btnGorevZamanlayici);
+            this.grpGorevAyar.Location = new System.Drawing.Point(12, 142);
+            this.grpGorevAyar.Name = "grpGorevAyar";
+            this.grpGorevAyar.Size = new System.Drawing.Size(1100, 135);
+            this.grpGorevAyar.TabIndex = 1;
+            this.grpGorevAyar.TabStop = false;
+            this.grpGorevAyar.Text = "Ayarla";
+            //
+            // lblGorevSaat
+            //
+            this.lblGorevSaat.AutoSize = true;
+            this.lblGorevSaat.Location = new System.Drawing.Point(12, 30);
+            this.lblGorevSaat.Name = "lblGorevSaat";
+            this.lblGorevSaat.Size = new System.Drawing.Size(76, 13);
+            this.lblGorevSaat.TabIndex = 0;
+            this.lblGorevSaat.Text = "Çalışma saati:";
+            //
+            // dtpGorevSaat
+            //
+            this.dtpGorevSaat.CustomFormat = "HH:mm";
+            this.dtpGorevSaat.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.dtpGorevSaat.Location = new System.Drawing.Point(100, 26);
+            this.dtpGorevSaat.Name = "dtpGorevSaat";
+            this.dtpGorevSaat.ShowUpDown = true;
+            this.dtpGorevSaat.Size = new System.Drawing.Size(70, 20);
+            this.dtpGorevSaat.TabIndex = 1;
+            this.dtpGorevSaat.Value = new System.DateTime(2026, 1, 1, 7, 0, 0, 0);
+            //
+            // lblGorevGunler
+            //
+            this.lblGorevGunler.AutoSize = true;
+            this.lblGorevGunler.Location = new System.Drawing.Point(12, 62);
+            this.lblGorevGunler.Name = "lblGorevGunler";
+            this.lblGorevGunler.Size = new System.Drawing.Size(42, 13);
+            this.lblGorevGunler.TabIndex = 2;
+            this.lblGorevGunler.Text = "Günler:";
+            //
+            // chkGun1..7
+            //
+            this.chkGun1.AutoSize = true;
+            this.chkGun1.Checked = true;
+            this.chkGun1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun1.Location = new System.Drawing.Point(100, 61);
+            this.chkGun1.Name = "chkGun1";
+            this.chkGun1.Size = new System.Drawing.Size(44, 17);
+            this.chkGun1.TabIndex = 3;
+            this.chkGun1.Text = "Pzt";
+            this.chkGun1.UseVisualStyleBackColor = true;
+            this.chkGun2.AutoSize = true;
+            this.chkGun2.Checked = true;
+            this.chkGun2.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun2.Location = new System.Drawing.Point(160, 61);
+            this.chkGun2.Name = "chkGun2";
+            this.chkGun2.Size = new System.Drawing.Size(43, 17);
+            this.chkGun2.TabIndex = 4;
+            this.chkGun2.Text = "Sal";
+            this.chkGun2.UseVisualStyleBackColor = true;
+            this.chkGun3.AutoSize = true;
+            this.chkGun3.Checked = true;
+            this.chkGun3.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun3.Location = new System.Drawing.Point(220, 61);
+            this.chkGun3.Name = "chkGun3";
+            this.chkGun3.Size = new System.Drawing.Size(44, 17);
+            this.chkGun3.TabIndex = 5;
+            this.chkGun3.Text = "Çar";
+            this.chkGun3.UseVisualStyleBackColor = true;
+            this.chkGun4.AutoSize = true;
+            this.chkGun4.Checked = true;
+            this.chkGun4.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun4.Location = new System.Drawing.Point(280, 61);
+            this.chkGun4.Name = "chkGun4";
+            this.chkGun4.Size = new System.Drawing.Size(44, 17);
+            this.chkGun4.TabIndex = 6;
+            this.chkGun4.Text = "Per";
+            this.chkGun4.UseVisualStyleBackColor = true;
+            this.chkGun5.AutoSize = true;
+            this.chkGun5.Checked = true;
+            this.chkGun5.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun5.Location = new System.Drawing.Point(340, 61);
+            this.chkGun5.Name = "chkGun5";
+            this.chkGun5.Size = new System.Drawing.Size(47, 17);
+            this.chkGun5.TabIndex = 7;
+            this.chkGun5.Text = "Cum";
+            this.chkGun5.UseVisualStyleBackColor = true;
+            this.chkGun6.AutoSize = true;
+            this.chkGun6.Checked = true;
+            this.chkGun6.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun6.Location = new System.Drawing.Point(400, 61);
+            this.chkGun6.Name = "chkGun6";
+            this.chkGun6.Size = new System.Drawing.Size(46, 17);
+            this.chkGun6.TabIndex = 8;
+            this.chkGun6.Text = "Cmt";
+            this.chkGun6.UseVisualStyleBackColor = true;
+            this.chkGun7.AutoSize = true;
+            this.chkGun7.Checked = true;
+            this.chkGun7.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkGun7.Location = new System.Drawing.Point(460, 61);
+            this.chkGun7.Name = "chkGun7";
+            this.chkGun7.Size = new System.Drawing.Size(45, 17);
+            this.chkGun7.TabIndex = 9;
+            this.chkGun7.Text = "Paz";
+            this.chkGun7.UseVisualStyleBackColor = true;
+            //
+            // btnGorevKur
+            //
+            this.btnGorevKur.Location = new System.Drawing.Point(12, 92);
+            this.btnGorevKur.Name = "btnGorevKur";
+            this.btnGorevKur.Size = new System.Drawing.Size(170, 27);
+            this.btnGorevKur.TabIndex = 10;
+            this.btnGorevKur.Text = "Görevi Kur / Güncelle";
+            this.btnGorevKur.UseVisualStyleBackColor = true;
+            this.btnGorevKur.Click += new System.EventHandler(this.btnGorevKur_Click);
+            //
+            // btnGorevKaldir
+            //
+            this.btnGorevKaldir.Location = new System.Drawing.Point(190, 92);
+            this.btnGorevKaldir.Name = "btnGorevKaldir";
+            this.btnGorevKaldir.Size = new System.Drawing.Size(120, 27);
+            this.btnGorevKaldir.TabIndex = 11;
+            this.btnGorevKaldir.Text = "Görevi Kaldır";
+            this.btnGorevKaldir.UseVisualStyleBackColor = true;
+            this.btnGorevKaldir.Click += new System.EventHandler(this.btnGorevKaldir_Click);
+            //
+            // btnGorevSimdi
+            //
+            this.btnGorevSimdi.Location = new System.Drawing.Point(318, 92);
+            this.btnGorevSimdi.Name = "btnGorevSimdi";
+            this.btnGorevSimdi.Size = new System.Drawing.Size(170, 27);
+            this.btnGorevSimdi.TabIndex = 12;
+            this.btnGorevSimdi.Text = "Şimdi Çalıştır (test)";
+            this.btnGorevSimdi.UseVisualStyleBackColor = true;
+            this.btnGorevSimdi.Click += new System.EventHandler(this.btnGorevSimdi_Click);
+            //
+            // btnGorevYenile
+            //
+            this.btnGorevYenile.Location = new System.Drawing.Point(496, 92);
+            this.btnGorevYenile.Name = "btnGorevYenile";
+            this.btnGorevYenile.Size = new System.Drawing.Size(90, 27);
+            this.btnGorevYenile.TabIndex = 13;
+            this.btnGorevYenile.Text = "Yenile";
+            this.btnGorevYenile.UseVisualStyleBackColor = true;
+            this.btnGorevYenile.Click += new System.EventHandler(this.btnGorevYenile_Click);
+            //
+            // btnGorevZamanlayici
+            //
+            this.btnGorevZamanlayici.Location = new System.Drawing.Point(594, 92);
+            this.btnGorevZamanlayici.Name = "btnGorevZamanlayici";
+            this.btnGorevZamanlayici.Size = new System.Drawing.Size(200, 27);
+            this.btnGorevZamanlayici.TabIndex = 14;
+            this.btnGorevZamanlayici.Text = "Görev Zamanlayıcı\'yı Aç";
+            this.btnGorevZamanlayici.UseVisualStyleBackColor = true;
+            this.btnGorevZamanlayici.Click += new System.EventHandler(this.btnGorevZamanlayici_Click);
+            //
+            // lblGorevNot
+            //
+            this.lblGorevNot.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblGorevNot.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.lblGorevNot.Location = new System.Drawing.Point(12, 290);
+            this.lblGorevNot.Name = "lblGorevNot";
+            this.lblGorevNot.Size = new System.Drawing.Size(1100, 120);
+            this.lblGorevNot.TabIndex = 2;
+            //
             // statusStrip1
             //
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -514,6 +787,11 @@
             this.flowRunsTop.PerformLayout();
             this.flowLinesTop.ResumeLayout(false);
             this.flowLinesTop.PerformLayout();
+            this.tabZamanlama.ResumeLayout(false);
+            this.grpGorevDurum.ResumeLayout(false);
+            this.grpGorevDurum.PerformLayout();
+            this.grpGorevAyar.ResumeLayout(false);
+            this.grpGorevAyar.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -560,6 +838,29 @@
         private System.Windows.Forms.Label lblFiltre;
         private System.Windows.Forms.TextBox txtFiltre;
         private System.Windows.Forms.Label lblSatirBilgi;
+        private System.Windows.Forms.TabPage tabZamanlama;
+        private System.Windows.Forms.GroupBox grpGorevDurum;
+        private System.Windows.Forms.Label lblGorevDurum;
+        private System.Windows.Forms.Label lblGorevSonraki;
+        private System.Windows.Forms.Label lblGorevSon;
+        private System.Windows.Forms.Label lblGorevProgram;
+        private System.Windows.Forms.GroupBox grpGorevAyar;
+        private System.Windows.Forms.Label lblGorevSaat;
+        private System.Windows.Forms.DateTimePicker dtpGorevSaat;
+        private System.Windows.Forms.Label lblGorevGunler;
+        private System.Windows.Forms.CheckBox chkGun1;
+        private System.Windows.Forms.CheckBox chkGun2;
+        private System.Windows.Forms.CheckBox chkGun3;
+        private System.Windows.Forms.CheckBox chkGun4;
+        private System.Windows.Forms.CheckBox chkGun5;
+        private System.Windows.Forms.CheckBox chkGun6;
+        private System.Windows.Forms.CheckBox chkGun7;
+        private System.Windows.Forms.Button btnGorevKur;
+        private System.Windows.Forms.Button btnGorevKaldir;
+        private System.Windows.Forms.Button btnGorevSimdi;
+        private System.Windows.Forms.Button btnGorevYenile;
+        private System.Windows.Forms.Button btnGorevZamanlayici;
+        private System.Windows.Forms.Label lblGorevNot;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.ToolStripStatusLabel lblHedef;
